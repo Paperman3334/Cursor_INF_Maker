@@ -18,6 +18,7 @@
   --primary:#2563eb;
   --primary-dark:#1d4ed8;
   --button:#cfd8e4;
+  --frame:#cbd5e1;
   --missing-bg:#fffce0;
   --missing-border:#eab308;
   --missing-text:#564008;
@@ -37,23 +38,32 @@ body{
 img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
 button{font:inherit}
 .app{
-  width:min(1100px, calc(100vw - 32px));
-  min-height:100vh;
-  margin:0 auto;
-  padding:16px 0 24px;
-  overflow:visible;
+  width:min(860px, calc(100vw - 36px));
+  margin:18px auto;
+  background:#f8fafc;
+  border:1px solid var(--frame);
+  border-radius:0;
+  box-shadow:0 12px 34px rgba(15,23,42,.13);
+  overflow:hidden;
+  padding:12px;
 }
 .titlebar{
-  min-height:64px;
+  min-height:72px;
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
-  align-items:start;
-  gap:16px;
+  align-items:center;
+  gap:14px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
 }
-.brand{display:flex;align-items:center;gap:10px;min-width:0;padding-top:8px}
-.brand img{width:28px;height:28px;flex:0 0 auto}
-h1{margin:0;font-size:30px;line-height:1.12;font-weight:800;letter-spacing:0;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.actions{display:flex;justify-content:flex-end;gap:8px;padding-top:12px;white-space:nowrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:38px;height:38px;flex:0 0 auto}
+.brand-copy{min-width:0}
+h1{margin:0;font-size:26px;line-height:1.12;font-weight:800;letter-spacing:0;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subtitle{margin-top:4px;color:var(--muted);font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;justify-content:flex-end;gap:8px;white-space:nowrap}
 .btn{
   height:34px;
   border:1px solid var(--button);
@@ -76,14 +86,23 @@ h1{margin:0;font-size:30px;line-height:1.12;font-weight:800;letter-spacing:0;col
 .btn.primary{min-width:148px;background:var(--primary);border-color:var(--primary-dark);color:#fff}
 .btn.primary:hover{background:#3b73f0}
 .btn:disabled{background:#f1f5f9;border-color:#e2e8f0;color:#94a3b8;cursor:default;transform:none}
+.content{
+  padding-top:12px;
+}
+.match-panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  overflow:hidden;
+}
 .summary{
-  min-height:44px;
+  min-height:42px;
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(180px,320px);
   align-items:center;
-  background:var(--panel);
+  background:#fbfcfe;
   padding:0 16px;
-  margin-bottom:10px;
+  border-bottom:1px solid var(--line);
   font-size:15px;
 }
 .summary-left{display:flex;align-items:center;gap:28px;min-width:0;overflow:hidden}
@@ -118,7 +137,7 @@ thead th{
   padding:0 14px;
 }
 tbody td{
-  height:42px;
+  height:60px;
   border-bottom:1px solid var(--line);
   padding:0 14px;
   vertical-align:middle;
@@ -128,8 +147,8 @@ tbody td{
   text-overflow:ellipsis;
 }
 tbody tr:nth-child(even) td{background:var(--alt)}
-th.role,td.role{width:230px;text-align:left}
-th.preview,td.preview{width:110px;text-align:center;padding:0}
+th.role,td.role{width:200px;text-align:left}
+th.preview,td.preview{width:116px;text-align:center;padding:0}
 th.file,td.file{text-align:center}
 tbody tr.missing td{
   background:var(--missing-bg);
@@ -140,10 +159,11 @@ tbody tr.missing td{
 tbody tr.missing td:first-child{border-left:1px solid var(--missing-border)}
 tbody tr.missing td:last-child{border-right:1px solid var(--missing-border)}
 .thumb{
-  width:36px;
-  height:36px;
-  margin:3px auto;
+  width:50px;
+  height:50px;
+  margin:5px auto;
   border:1px solid #cbd5e1;
+  border-radius:8px;
   background:
     linear-gradient(45deg,#edf0f5 25%,transparent 25%),
     linear-gradient(-45deg,#edf0f5 25%,transparent 25%),
@@ -156,17 +176,19 @@ tbody tr.missing td:last-child{border-right:1px solid var(--missing-border)}
   place-items:center;
   overflow:hidden;
 }
-.thumb img{max-width:30px;max-height:30px;display:block}
+.thumb img{max-width:42px;max-height:42px;display:block}
 .hidden{display:none!important}
 .drag{outline:2px solid var(--primary);outline-offset:-2px}
 @media (max-width:720px){
-  .app{width:100%;padding:12px}
-  .titlebar{grid-template-columns:1fr;gap:8px}
+  .app{width:calc(100vw - 20px);margin:10px auto;padding:10px}
+  .titlebar{grid-template-columns:1fr;gap:8px;padding:12px}
+  .content{padding-top:10px}
   .actions{justify-content:flex-start;flex-wrap:wrap;padding-top:0}
   .summary{grid-template-columns:1fr;gap:6px;padding:10px 12px}
   .summary-left{gap:16px;flex-wrap:wrap}
   .status{text-align:left;padding-left:0}
-  h1{font-size:26px}
+  h1{font-size:25px}
+  .subtitle{font-size:12px}
   th.role,td.role{width:42%}
   th.preview,td.preview{width:76px}
 }
@@ -177,7 +199,10 @@ tbody tr.missing td:last-child{border-right:1px solid var(--missing-border)}
   <section class="titlebar">
     <div class="brand">
       <img src="assets/mouse-inf.png" alt="">
-      <h1>Cursor INF Maker</h1>
+      <div class="brand-copy">
+        <h1>Cursor INF Maker</h1>
+        <div class="subtitle">生成鼠标光标inf安装文件</div>
+      </div>
     </div>
     <div class="actions">
       <button class="btn" id="clearBtn">清空</button>
@@ -185,21 +210,25 @@ tbody tr.missing td:last-child{border-right:1px solid var(--missing-border)}
       <button class="btn primary" id="saveBtn" disabled>保存安装inf文件</button>
     </div>
   </section>
-  <section class="summary">
-    <div class="summary-left">
-      <span>方案：<strong id="schemeName">—</strong></span>
-      <span>光标文件：<strong id="fileCount">0</strong></span>
-      <span>匹配：<strong id="matchedCount">0 / 17</strong></span>
-    </div>
-    <div class="status" id="saveStatus"></div>
-  </section>
-  <section class="grid-shell">
-    <table>
-      <thead>
-        <tr><th class="role">项目</th><th class="preview">预览</th><th class="file">匹配文件</th></tr>
-      </thead>
-      <tbody id="roleBody"></tbody>
-    </table>
+  <section class="content">
+    <section class="match-panel">
+      <section class="summary">
+        <div class="summary-left">
+          <span>方案：<strong id="schemeName">—</strong></span>
+          <span>光标文件：<strong id="fileCount">0</strong></span>
+          <span>匹配：<strong id="matchedCount">0 / 17</strong></span>
+        </div>
+        <div class="status" id="saveStatus"></div>
+      </section>
+      <section class="grid-shell">
+        <table>
+          <thead>
+            <tr><th class="role">项目</th><th class="preview">预览</th><th class="file">匹配文件</th></tr>
+          </thead>
+          <tbody id="roleBody"></tbody>
+        </table>
+      </section>
+    </section>
   </section>
 </main>
 <input id="folderInput" type="file" webkitdirectory multiple class="hidden" accept=".cur,.ani">

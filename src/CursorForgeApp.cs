@@ -76,7 +76,7 @@ internal sealed class CursorForgeForm : Form
     {
         Text = "Cursor INF Maker";
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(1080, 1000);
+        ClientSize = new Size(980, 1084);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         BackColor = Ui.Shell;
@@ -101,52 +101,88 @@ internal sealed class CursorForgeForm : Form
 
     private void BuildLayout()
     {
+        var host = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Ui.Shell,
+            Padding = new Padding(8)
+        };
+        Controls.Add(host);
+
+        var outer = new BorderedPanel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Ui.FrameBack,
+            BorderColor = Ui.Frame,
+            Padding = new Padding(10)
+        };
+        host.Controls.Add(outer);
+
         var root = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
             RowCount = 3,
-            Padding = new Padding(20)
+            BackColor = Ui.FrameBack,
+            Margin = new Padding(0),
+            Padding = new Padding(0)
         };
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 68));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 80));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 8));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        Controls.Add(root);
+        outer.Controls.Add(root);
 
         root.Controls.Add(BuildTitleBar(), 0, 0);
-        root.Controls.Add(BuildSummary(), 0, 1);
-        root.Controls.Add(BuildGrid(), 0, 2);
+        root.Controls.Add(new Panel { Dock = DockStyle.Fill, BackColor = Ui.FrameBack, Margin = new Padding(0) }, 0, 1);
+        root.Controls.Add(BuildMatchPanel(), 0, 2);
     }
 
     private Control BuildTitleBar()
     {
-        var titleBar = new TableLayoutPanel
+        var titleBar = new RoundedTableLayoutPanel
         {
             Dock = DockStyle.Fill,
+            BackColor = Ui.Panel,
+            BorderColor = Ui.Line,
+            Radius = 8,
             ColumnCount = 2,
             RowCount = 1,
-            Margin = new Padding(0, 0, 0, 16)
+            Margin = new Padding(0),
+            Padding = new Padding(20, 8, 12, 8)
         };
         titleBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        titleBar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 360));
+        titleBar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 430));
 
-        var titleBlock = new FlowLayoutPanel
+        var titleBlock = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.TopDown,
-            WrapContents = false,
-            Margin = new Padding(0)
+            ColumnCount = 1,
+            RowCount = 2,
+            Margin = new Padding(0),
+            Padding = new Padding(0)
         };
+        titleBlock.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
+        titleBlock.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        titleBar.Controls.Add(titleBlock, 0, 0);
 
         titleBlock.Controls.Add(new Label
         {
             Text = "Cursor INF Maker",
-            AutoSize = true,
+            Dock = DockStyle.Fill,
             Font = new Font(Font.FontFamily, 16F, FontStyle.Bold),
             ForeColor = Ui.Text,
-            Margin = new Padding(0, 8, 0, 0)
-        });
-        titleBar.Controls.Add(titleBlock, 0, 0);
+            Margin = new Padding(0),
+            TextAlign = ContentAlignment.MiddleLeft
+        }, 0, 0);
+        titleBlock.Controls.Add(new Label
+        {
+            Text = "生成鼠标光标inf安装文件",
+            Dock = DockStyle.Fill,
+            Font = new Font(Font.FontFamily, 8.5F),
+            ForeColor = Ui.Muted,
+            Margin = new Padding(1, 0, 0, 0),
+            TextAlign = ContentAlignment.TopLeft
+        }, 0, 1);
 
         var actions = new FlowLayoutPanel
         {
@@ -154,15 +190,15 @@ internal sealed class CursorForgeForm : Form
             FlowDirection = FlowDirection.RightToLeft,
             WrapContents = false,
             Margin = new Padding(0),
-            Padding = new Padding(0, 14, 0, 0)
+            Padding = new Padding(0, 10, 0, 0)
         };
         titleBar.Controls.Add(actions, 1, 0);
 
-        saveButton = MakeButton("保存安装inf文件", 142, Ui.Primary, Color.White);
+        saveButton = MakeButton("保存安装inf文件", 168, Ui.Primary, Color.White);
         saveButton.Click += (_, _) => SaveInf();
         actions.Controls.Add(saveButton);
 
-        var chooseButton = MakeButton("选择文件夹", 104, Color.White, Ui.Text);
+        var chooseButton = MakeButton("选择文件夹", 122, Color.White, Ui.Text);
         chooseButton.Click += (_, _) => ChooseFolder();
         actions.Controls.Add(chooseButton);
 
@@ -173,19 +209,49 @@ internal sealed class CursorForgeForm : Form
         return titleBar;
     }
 
+    private Control BuildMatchPanel()
+    {
+        var frame = new RoundedPanel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Ui.Panel,
+            BorderColor = Ui.Line,
+            Radius = 8,
+            Margin = new Padding(0),
+            Padding = new Padding(1)
+        };
+
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Ui.Panel,
+            ColumnCount = 1,
+            RowCount = 2,
+            Margin = new Padding(0),
+            Padding = new Padding(0)
+        };
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        frame.Controls.Add(layout);
+
+        layout.Controls.Add(BuildSummary(), 0, 0);
+        layout.Controls.Add(BuildGrid(), 0, 1);
+        return frame;
+    }
+
     private Control BuildSummary()
     {
         var panel = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            BackColor = Ui.Panel,
+            BackColor = Ui.SummaryBack,
             ColumnCount = 2,
             RowCount = 1,
             Padding = new Padding(16, 0, 16, 0),
             Margin = new Padding(0),
         };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 360));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300));
         panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         var summary = new FlowLayoutPanel
@@ -193,7 +259,7 @@ internal sealed class CursorForgeForm : Form
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.LeftToRight,
             WrapContents = false,
-            Padding = new Padding(0, 13, 0, 0),
+            Padding = new Padding(0, 11, 0, 0),
             Margin = new Padding(0)
         };
         schemeNameLabel = MakeSummaryLabel();
@@ -239,11 +305,11 @@ internal sealed class CursorForgeForm : Form
             ScrollBars = ScrollBars.None,
             SelectionMode = DataGridViewSelectionMode.CellSelect,
             GridColor = Ui.Line,
-            Margin = new Padding(0, 10, 0, 0),
-            RowTemplate = { Height = 46 },
+            Margin = new Padding(0),
+            RowTemplate = { Height = 52 },
             TabStop = false
         };
-        grid.ColumnHeadersHeight = 38;
+        grid.ColumnHeadersHeight = 34;
         grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
         grid.ColumnHeadersDefaultCellStyle.BackColor = Ui.Header;
         grid.ColumnHeadersDefaultCellStyle.ForeColor = Ui.Text;
@@ -257,7 +323,7 @@ internal sealed class CursorForgeForm : Form
         grid.AlternatingRowsDefaultCellStyle.SelectionBackColor = Color.FromArgb(250, 251, 253);
         grid.AlternatingRowsDefaultCellStyle.SelectionForeColor = Ui.Text;
 
-        grid.Columns.Add(MakeTextColumn("Role", "项目", 240, DataGridViewContentAlignment.MiddleLeft));
+        grid.Columns.Add(MakeTextColumn("Role", "项目", 220, DataGridViewContentAlignment.MiddleLeft));
         var previewColumn = new DataGridViewImageColumn
         {
             Name = "Preview",
@@ -265,7 +331,7 @@ internal sealed class CursorForgeForm : Form
             ReadOnly = true,
             Resizable = DataGridViewTriState.False,
             SortMode = DataGridViewColumnSortMode.NotSortable,
-            Width = 120,
+            Width = 112,
             ImageLayout = DataGridViewImageCellLayout.Zoom
         };
         previewColumn.DefaultCellStyle.NullValue = null!;
@@ -274,7 +340,10 @@ internal sealed class CursorForgeForm : Form
         previewColumn.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
         previewColumn.HeaderCell.Style.Padding = new Padding(0);
         grid.Columns.Add(previewColumn);
-        grid.Columns.Add(MakeTextColumn("File", "匹配文件", 680, DataGridViewContentAlignment.MiddleCenter));
+        var fileColumn = MakeTextColumn("File", "匹配文件", 580, DataGridViewContentAlignment.MiddleCenter);
+        fileColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        fileColumn.MinimumWidth = 540;
+        grid.Columns.Add(fileColumn);
         grid.CellPainting += PaintPreviewCell;
         grid.RowPostPaint += PaintMissingRowBorder;
         grid.CellMouseDown += (_, _) => ClearGridFocus();
@@ -326,7 +395,7 @@ internal sealed class CursorForgeForm : Form
                 graphics.DrawLine(linePen, e.CellBounds.Left, e.CellBounds.Bottom - 1, e.CellBounds.Right, e.CellBounds.Bottom - 1);
             }
 
-            var box = new Rectangle(e.CellBounds.Left + (e.CellBounds.Width - 40) / 2, e.CellBounds.Top + (e.CellBounds.Height - 40) / 2, 40, 40);
+            var box = new Rectangle(e.CellBounds.Left + (e.CellBounds.Width - 44) / 2, e.CellBounds.Top + (e.CellBounds.Height - 44) / 2, 44, 44);
             DrawPreviewBackground(graphics, box);
 
             Image? image = GetPreviewFrameForRow(e.RowIndex);
@@ -395,6 +464,11 @@ internal sealed class CursorForgeForm : Form
     {
         using var light = new SolidBrush(Color.White);
         using var dark = new SolidBrush(Color.FromArgb(235, 238, 243));
+        using GraphicsPath path = Ui.RoundedRectangle(box, 8);
+
+        GraphicsState clipState = graphics.Save();
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.SetClip(path);
         graphics.FillRectangle(light, box);
 
         const int cell = 6;
@@ -408,9 +482,11 @@ internal sealed class CursorForgeForm : Form
                 }
             }
         }
+        graphics.Restore(clipState);
 
         using var border = new Pen(Ui.PreviewBorder);
-        graphics.DrawRectangle(border, box);
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.DrawPath(border, path);
     }
 
     private static Rectangle FitImage(Size imageSize, Rectangle bounds)
@@ -580,7 +656,7 @@ internal sealed class CursorForgeForm : Form
 
             int index = grid.Rows.Add(role.Label, DBNull.Value, string.IsNullOrEmpty(name) ? EmptyChoice : name);
             grid.Rows[index].Tag = role;
-            grid.Rows[index].Height = 46;
+            grid.Rows[index].Height = 52;
             ApplyRowState(grid.Rows[index], IsMissingMapping(name), index);
         }
         ClearGridFocus();
@@ -939,6 +1015,99 @@ internal sealed class CursorForgeForm : Form
         base.Dispose(disposing);
     }
 
+}
+
+internal class BorderedPanel : Panel
+{
+    public BorderedPanel()
+    {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color BorderColor { get; set; } = Ui.Line;
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        using var pen = new Pen(BorderColor);
+        e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+    }
+}
+
+internal sealed class RoundedPanel : BorderedPanel
+{
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int Radius { get; set; } = 8;
+
+    protected override void OnSizeChanged(EventArgs e)
+    {
+        base.OnSizeChanged(e);
+        UpdateRegion();
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        using GraphicsPath path = Ui.RoundedRectangle(new Rectangle(0, 0, Width - 1, Height - 1), Radius);
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        using var fillBrush = new SolidBrush(BackColor);
+        using var borderPen = new Pen(BorderColor);
+        e.Graphics.FillPath(fillBrush, path);
+        e.Graphics.DrawPath(borderPen, path);
+    }
+
+    private void UpdateRegion()
+    {
+        if (Width <= 0 || Height <= 0)
+        {
+            return;
+        }
+
+        using GraphicsPath path = Ui.RoundedRectangle(new Rectangle(0, 0, Width, Height), Radius);
+        Region = new Region(path);
+    }
+}
+
+internal sealed class RoundedTableLayoutPanel : TableLayoutPanel
+{
+    public RoundedTableLayoutPanel()
+    {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Color BorderColor { get; set; } = Ui.Line;
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int Radius { get; set; } = 8;
+
+    protected override void OnSizeChanged(EventArgs e)
+    {
+        base.OnSizeChanged(e);
+        UpdateRegion();
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        using GraphicsPath path = Ui.RoundedRectangle(new Rectangle(0, 0, Width - 1, Height - 1), Radius);
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        using var fillBrush = new SolidBrush(BackColor);
+        using var borderPen = new Pen(BorderColor);
+        e.Graphics.FillPath(fillBrush, path);
+        base.OnPaint(e);
+        e.Graphics.DrawPath(borderPen, path);
+    }
+
+    private void UpdateRegion()
+    {
+        if (Width <= 0 || Height <= 0)
+        {
+            return;
+        }
+
+        using GraphicsPath path = Ui.RoundedRectangle(new Rectangle(0, 0, Width, Height), Radius);
+        Region = new Region(path);
+    }
 }
 
 internal sealed class DisplayGrid : DataGridView
@@ -1543,12 +1712,15 @@ internal sealed class CursorPreview : IDisposable
 internal static class Ui
 {
     public static readonly Color Shell = Color.FromArgb(244, 246, 249);
+    public static readonly Color FrameBack = Color.FromArgb(248, 250, 252);
     public static readonly Color Panel = Color.White;
     public static readonly Color AltRow = Color.FromArgb(249, 250, 252);
     public static readonly Color Header = Color.FromArgb(247, 249, 252);
+    public static readonly Color SummaryBack = Color.FromArgb(251, 252, 254);
     public static readonly Color Text = Color.FromArgb(31, 41, 55);
     public static readonly Color Muted = Color.FromArgb(107, 114, 128);
     public static readonly Color Line = Color.FromArgb(232, 236, 242);
+    public static readonly Color Frame = Color.FromArgb(203, 213, 225);
     public static readonly Color Border = Color.FromArgb(174, 183, 197);
     public static readonly Color ButtonBorder = Color.FromArgb(207, 216, 228);
     public static readonly Color PreviewBorder = Color.FromArgb(203, 213, 225);
@@ -1563,4 +1735,16 @@ internal static class Ui
     public static readonly Color DisabledBack = Color.FromArgb(241, 245, 249);
     public static readonly Color DisabledBorder = Color.FromArgb(226, 232, 240);
     public static readonly Color DisabledText = Color.FromArgb(148, 163, 184);
+
+    public static GraphicsPath RoundedRectangle(Rectangle bounds, int radius)
+    {
+        int diameter = Math.Max(1, radius * 2);
+        var path = new GraphicsPath();
+        path.AddArc(bounds.Left, bounds.Top, diameter, diameter, 180, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Top, diameter, diameter, 270, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Bottom - diameter, diameter, diameter, 0, 90);
+        path.AddArc(bounds.Left, bounds.Bottom - diameter, diameter, diameter, 90, 90);
+        path.CloseFigure();
+        return path;
+    }
 }
