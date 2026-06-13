@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cursor INF Maker</title>
+<style>
+:root{
+  --shell:#f4f6f9;
+  --panel:#fff;
+  --alt:#f9fafc;
+  --header:#f7f9fc;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --line:#e8ecf2;
+  --primary:#2563eb;
+  --primary-dark:#1d4ed8;
+  --button:#cfd8e4;
+  --missing-bg:#fffce0;
+  --missing-border:#eab308;
+  --missing-text:#564008;
+  --ok:#166534;
+  --warn:#92400e;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html,body,button,table{user-select:none;-webkit-user-select:none}
+body{
+  background:var(--shell);
+  color:var(--text);
+  font-family:"Microsoft YaHei UI","Segoe UI",Arial,sans-serif;
+  font-size:14px;
+  cursor:default;
+}
+img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+button{font:inherit}
+.app{
+  width:min(1100px, calc(100vw - 32px));
+  min-height:100vh;
+  margin:0 auto;
+  padding:16px 0 24px;
+  overflow:visible;
+}
+.titlebar{
+  min-height:64px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:start;
+  gap:16px;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;padding-top:8px}
+.brand img{width:28px;height:28px;flex:0 0 auto}
+h1{margin:0;font-size:30px;line-height:1.12;font-weight:800;letter-spacing:0;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;justify-content:flex-end;gap:8px;padding-top:12px;white-space:nowrap}
+.btn{
+  height:34px;
+  border:1px solid var(--button);
+  border-radius:8px;
+  background:#fff;
+  color:var(--text);
+  padding:0 16px;
+  min-width:72px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  white-space:nowrap;
+  line-height:1;
+  transition:background .12s ease,border-color .12s ease,transform .06s ease;
+}
+.btn:hover{background:#f8fbff;border-color:#b9c8dc}
+.btn:active{transform:translateY(1px)}
+#chooseBtn{min-width:104px}
+.btn.primary{min-width:148px;background:var(--primary);border-color:var(--primary-dark);color:#fff}
+.btn.primary:hover{background:#3b73f0}
+.btn:disabled{background:#f1f5f9;border-color:#e2e8f0;color:#94a3b8;cursor:default;transform:none}
+.summary{
+  min-height:44px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(180px,320px);
+  align-items:center;
+  background:var(--panel);
+  padding:0 16px;
+  margin-bottom:10px;
+  font-size:15px;
+}
+.summary-left{display:flex;align-items:center;gap:28px;min-width:0;overflow:hidden}
+.summary span{white-space:nowrap}
+.status{
+  text-align:right;
+  color:var(--muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  padding-left:8px;
+}
+.status.ok{color:var(--ok)}
+.status.warn{color:var(--warn)}
+.grid-shell{
+  background:var(--panel);
+  overflow:hidden;
+}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:fixed;
+  font-size:15px;
+}
+thead th{
+  height:36px;
+  background:var(--header);
+  color:var(--text);
+  font-weight:700;
+  border-bottom:1px solid var(--line);
+  padding:0 14px;
+}
+tbody td{
+  height:42px;
+  border-bottom:1px solid var(--line);
+  padding:0 14px;
+  vertical-align:middle;
+  background:var(--panel);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+tbody tr:nth-child(even) td{background:var(--alt)}
+th.role,td.role{width:230px;text-align:left}
+th.preview,td.preview{width:110px;text-align:center;padding:0}
+th.file,td.file{text-align:center}
+tbody tr.missing td{
+  background:var(--missing-bg);
+  color:var(--missing-text);
+  border-top:1px solid var(--missing-border);
+  border-bottom:1px solid var(--missing-border);
+}
+tbody tr.missing td:first-child{border-left:1px solid var(--missing-border)}
+tbody tr.missing td:last-child{border-right:1px solid var(--missing-border)}
+.thumb{
+  width:36px;
+  height:36px;
+  margin:3px auto;
+  border:1px solid #cbd5e1;
+  background:
+    linear-gradient(45deg,#edf0f5 25%,transparent 25%),
+    linear-gradient(-45deg,#edf0f5 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#edf0f5 75%),
+    linear-gradient(-45deg,transparent 75%,#edf0f5 75%);
+  background-color:#fff;
+  background-size:12px 12px;
+  background-position:0 0,0 6px,6px -6px,-6px 0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+.thumb img{max-width:30px;max-height:30px;display:block}
+.hidden{display:none!important}
+.drag{outline:2px solid var(--primary);outline-offset:-2px}
+@media (max-width:720px){
+  .app{width:100%;padding:12px}
+  .titlebar{grid-template-columns:1fr;gap:8px}
+  .actions{justify-content:flex-start;flex-wrap:wrap;padding-top:0}
+  .summary{grid-template-columns:1fr;gap:6px;padding:10px 12px}
+  .summary-left{gap:16px;flex-wrap:wrap}
+  .status{text-align:left;padding-left:0}
+  h1{font-size:26px}
+  th.role,td.role{width:42%}
+  th.preview,td.preview{width:76px}
+}
+</style>
+</head>
+<body>
+<main class="app" id="mainPanel">
+  <section class="titlebar">
+    <div class="brand">
+      <img src="assets/mouse-inf.png" alt="">
+      <h1>Cursor INF Maker</h1>
+    </div>
+    <div class="actions">
+      <button class="btn" id="clearBtn">清空</button>
+      <button class="btn" id="chooseBtn">选择文件夹</button>
+      <button class="btn primary" id="saveBtn" disabled>保存安装inf文件</button>
+    </div>
+  </section>
+  <section class="summary">
+    <div class="summary-left">
+      <span>方案：<strong id="schemeName">—</strong></span>
+      <span>光标文件：<strong id="fileCount">0</strong></span>
+      <span>匹配：<strong id="matchedCount">0 / 17</strong></span>
+    </div>
+    <div class="status" id="saveStatus"></div>
+  </section>
+  <section class="grid-shell">
+    <table>
+      <thead>
+        <tr><th class="role">项目</th><th class="preview">预览</th><th class="file">匹配文件</th></tr>
+      </thead>
+      <tbody id="roleBody"></tbody>
+    </table>
+  </section>
+</main>
+<input id="folderInput" type="file" webkitdirectory multiple class="hidden" accept=".cur,.ani">
+<script>
+const OUTPUT_NAME = "~右键安装.inf";
+const OUTPUT_MIME = "application/octet-stream";
+const roles = [
+  {key:"pointer", label:"正常选择", reg:"Arrow", words:["正常选择","arrow","normal","pointer","select","cursor","standard","default","mouse","默认","正常"]},
+  {key:"help", label:"帮助选择", reg:"Help", words:["帮助选择","help","helpsel","question","帮助"]},
+  {key:"work", label:"后台运行", reg:"AppStarting", words:["后台运行","working","work","appstarting","app_starting","background","start1","后台"]},
+  {key:"busy", label:"忙", reg:"Wait", words:["忙","busy","wait","loading","progress","start","等待"]},
+  {key:"cross", label:"精准选择", reg:"Crosshair", words:["精准选择","精确选择","cross","crosshair","precision","精准","精确"]},
+  {key:"text", label:"文本选择", reg:"IBeam", words:["文本选择","text","ibeam","i-beam","beam","文本"]},
+  {key:"hand", label:"手写", reg:"NWPen", words:["手写","handwriting","pen","nwpen","write","笔"]},
+  {key:"unavailiable", label:"不可用", reg:"No", words:["不可用","unavailable","unavailiable","no","not","forbidden","denied","禁止"]},
+  {key:"vert", label:"垂直调整大小", reg:"SizeNS", words:["垂直调整大小","垂直调整","vresize","vert","vertical","sizens","size_ns","上下","垂直"]},
+  {key:"horz", label:"水平调整大小", reg:"SizeWE", words:["水平调整大小","水平调整","hresize","hori","horz","horizontal","sizewe","size_we","左右","水平"]},
+  {key:"dgn1", label:"沿对角线调整大小1", reg:"SizeNWSE", words:["沿对角线调整大小1","沿对角线调整大小 1","对角线调整大小1","对角线1","d1resize","diag1","dgn1","nwse","sizenwse","左上"]},
+  {key:"dgn2", label:"沿对角线调整大小2", reg:"SizeNESW", words:["沿对角线调整大小2","沿对角线调整大小 2","对角线调整大小2","对角线2","d2resize","diag2","dgn2","nesw","sizenesw","右上"]},
+  {key:"move", label:"移动", reg:"SizeAll", words:["移动","move","sizeall","all"]},
+  {key:"alternate", label:"候选", reg:"UpArrow", words:["候选","候选选择","alternate","arrowup","up","uparrow","mouse"]},
+  {key:"link", label:"链接选择", reg:"Hand", words:["链接选择","link","hand","hyperlink","链接","超链接"]},
+  {key:"person", label:"个人选择", reg:"Person", words:["个人选择","人员选择","person","people","user","用户","人员","个人"]},
+  {key:"pin", label:"位置选择", reg:"Pin", words:["位置选择","location","loc","pin","place","位置","定位"]}
+];
+const schemeOrder = ["pointer","help","work","busy","cross","text","hand","unavailiable","vert","horz","dgn1","dgn2","move","alternate","link","person","pin"];
+let state = {scheme:"", files:[], fileMap:new Map(), mappings:{}, folderHandle:null, previews:new Map(), timers:new Map()};
+const $ = id => document.getElementById(id);
+
+document.addEventListener("selectstart", e => e.preventDefault());
+document.addEventListener("dragstart", e => {
+  const types = e.dataTransfer ? [...e.dataTransfer.types] : [];
+  if(!types.includes("Files")) e.preventDefault();
+});
+
+function isCursor(name){ return /\.(cur|ani)$/i.test(name); }
+function ext(name){ return (name.split(".").pop() || "").toLowerCase(); }
+function basenameNoExt(name){ return name.replace(/\.[^.]+$/,""); }
+function safeInf(value){ return String(value || "").replace(/"/g,"'").replace(/[\r\n]/g," ").trim(); }
+function normalizeName(value){ return basenameNoExt(value).toLowerCase().replace(/[\s_.\-]+/g,""); }
+function setStatus(text, type){
+  const el = $("saveStatus");
+  el.textContent = text || "";
+  el.className = "status" + (type ? " " + type : "");
+}
+function scoreFile(role, name){
+  const low = normalizeName(name);
+  let best = 0;
+  for(const word of role.words){
+    const normalized = normalizeName(word);
+    if(low === normalized) best = Math.max(best, 100);
+    else if(low.endsWith(normalized)) best = Math.max(best, 82);
+    else if(low.includes(normalized)) best = Math.max(best, 58);
+  }
+  return best;
+}
+function autoMap(){
+  state.mappings = {};
+  const used = new Set();
+  for(const role of roles){
+    let bestName = "";
+    let bestScore = 0;
+    for(const item of state.files){
+      if(used.has(item.name)) continue;
+      const score = scoreFile(role, item.name);
+      if(score > bestScore){ bestName = item.name; bestScore = score; }
+    }
+    if(bestName && bestScore >= 58){
+      state.mappings[role.key] = bestName;
+      used.add(bestName);
+    }else{
+      state.mappings[role.key] = "";
+    }
+  }
+}
+function stopTimers(){
+  for(const timer of state.timers.values()) clearInterval(timer);
+  state.timers.clear();
+}
+function renderRows(){
+  const body = $("roleBody");
+  body.innerHTML = "";
+  const hasFiles = state.files.length > 0;
+  for(const role of roles){
+    const name = state.mappings[role.key] || "";
+    const tr = document.createElement("tr");
+    if(hasFiles && !name) tr.className = "missing";
+    tr.innerHTML = `<td class="role">${role.label}</td><td class="preview"><div class="thumb" id="thumb_${role.key}"></div></td><td class="file">${name || "未指定"}</td>`;
+    body.appendChild(tr);
+    updateThumb(role);
+  }
+}
+async function renderPreview(fileObj){
+  if(!fileObj) return [];
+  if(state.previews.has(fileObj.name)) return state.previews.get(fileObj.name);
+  try{
+    const buffer = await fileObj.file.arrayBuffer();
+    const frames = ext(fileObj.name) === "ani" ? await parseAni(buffer) : await parseCur(buffer);
+    const result = frames && frames.length ? frames : [];
+    state.previews.set(fileObj.name, result);
+    return result;
+  }catch(err){
+    console.warn(err);
+    return [];
+  }
+}
+async function updateThumb(role){
+  const thumb = $("thumb_" + role.key);
+  if(!thumb) return;
+  thumb.innerHTML = "";
+  const name = state.mappings[role.key] || "";
+  const obj = state.fileMap.get(name);
+  if(!obj) return;
+  const frames = await renderPreview(obj);
+  if(!frames.length) return;
+  const img = document.createElement("img");
+  img.src = frames[0];
+  thumb.appendChild(img);
+  if(frames.length > 1){
+    let index = 0;
+    const timer = setInterval(() => {
+      index = (index + 1) % frames.length;
+      img.src = frames[index];
+    }, 120);
+    state.timers.set(role.key, timer);
+  }
+}
+function updateUi(){
+  stopTimers();
+  const hasFiles = state.files.length > 0;
+  $("clearBtn").style.visibility = hasFiles ? "visible" : "hidden";
+  $("saveBtn").disabled = !hasFiles;
+  $("schemeName").textContent = state.scheme || "—";
+  $("fileCount").textContent = String(state.files.length);
+  const matched = roles.filter(role => !!state.mappings[role.key]).length;
+  $("matchedCount").textContent = `${matched} / ${roles.length}`;
+  renderRows();
+}
+function clearAll(){
+  stopTimers();
+  state = {scheme:"", files:[], fileMap:new Map(), mappings:{}, folderHandle:null, previews:new Map(), timers:new Map()};
+  $("folderInput").value = "";
+  setStatus("");
+  updateUi();
+}
+async function loadFolder(folderName, items, handle){
+  stopTimers();
+  state.scheme = folderName || "Custom Cursor";
+  state.files = items.filter(item => isCursor(item.name)).sort((a,b)=>a.name.localeCompare(b.name,"zh-CN"));
+  state.fileMap = new Map(state.files.map(item => [item.name, item]));
+  state.folderHandle = handle || null;
+  state.previews = new Map();
+  setStatus("");
+  autoMap();
+  updateUi();
+  if(!state.files.length) setStatus("未找到 .cur / .ani 文件", "warn");
+}
+async function chooseFolder(){
+  if(window.showDirectoryPicker){
+    try{
+      const dir = await window.showDirectoryPicker({mode:"readwrite"});
+      const files = [];
+      for await (const [name, handle] of dir.entries()){
+        if(handle.kind === "file" && isCursor(name)){
+          files.push({name, file:await handle.getFile()});
+        }
+      }
+      await loadFolder(dir.name, files, dir);
+      return;
+    }catch(err){
+      if(err && err.name === "AbortError") return;
+      console.warn(err);
+    }
+  }
+  $("folderInput").click();
+}
+$("folderInput").addEventListener("change", event => {
+  const raw = [...event.target.files];
+  if(!raw.length) return;
+  let folder = "Custom Cursor";
+  const items = [];
+  for(const file of raw){
+    const rel = file.webkitRelativePath || file.name;
+    const parts = rel.split("/").filter(Boolean);
+    if(parts.length >= 2) folder = parts[0];
+    if(parts.length > 2) continue;
+    if(isCursor(file.name)) items.push({name:file.name, file});
+  }
+  loadFolder(folder, items, null);
+});
+const panel = $("mainPanel");
+panel.addEventListener("dragover", event => {
+  event.preventDefault();
+  panel.classList.add("drag");
+});
+panel.addEventListener("dragleave", () => panel.classList.remove("drag"));
+panel.addEventListener("drop", event => {
+  event.preventDefault();
+  panel.classList.remove("drag");
+  const items = [...event.dataTransfer.items];
+  const entry = items[0] && items[0].webkitGetAsEntry ? items[0].webkitGetAsEntry() : null;
+  if(!entry || !entry.isDirectory) return;
+  const reader = entry.createReader();
+  reader.readEntries(async entries => {
+    const files = [];
+    for(const ent of entries){
+      if(ent.isFile && isCursor(ent.name)){
+        const file = await new Promise(resolve => ent.file(resolve));
+        files.push({name:ent.name, file});
+      }
+    }
+    loadFolder(entry.name, files, null);
+  });
+});
+function buildInf(){
+  const scheme = safeInf(state.scheme || "Custom Cursor");
+  const curDir = "Cursors\\" + scheme;
+  const presentRoles = new Map();
+  for(const key of schemeOrder){
+    const fileName = state.mappings[key] || "";
+    if(fileName) presentRoles.set(key, fileName);
+  }
+  const lines = [];
+  lines.push("[Version]","signature=\"$CHICAGO$\"","",
+    "[DefaultInstall]","CopyFiles = Scheme.Cur","AddReg    = Scheme.Reg,Wreg","RunPostSetupCommands = OpenMouseSettings","",
+    "[DestinationDirs]",`Scheme.Cur = 10,\"%CUR_DIR%\"`,"",
+    "[Scheme.Reg]");
+  const schemeList = schemeOrder.map(key => presentRoles.has(key) ? `%10%\\%CUR_DIR%\\%${key}%` : "").join(",");
+  lines.push(`HKCU,\"Control Panel\\Cursors\\Schemes\",\"%SCHEME_NAME%\",,\"${schemeList}\"`,"",
+    "[Wreg]",`HKCU,\"Control Panel\\Cursors\",,0x00020000,\"%SCHEME_NAME%\"`);
+  for(const role of roles){
+    if(presentRoles.has(role.key)){
+      lines.push(`HKCU,\"Control Panel\\Cursors\",${role.reg},0x00020000,\"%10%\\%CUR_DIR%\\%${role.key}%\"`);
+    }
+  }
+  lines.push(`HKLM,\"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Runonce\\Setup\\\",\"\",,\"rundll32.exe shell32.dll,Control_RunDLL main.cpl @0,1\"`,"",
+    "[Scheme.Cur]");
+  for(const item of state.files) lines.push(`\"${safeInf(item.name)}\"`);
+  lines.push("", "[OpenMouseSettings]", "rundll32.exe shell32.dll,Control_RunDLL main.cpl @0,1", "", "[Strings]",
+    `CUR_DIR         = \"${safeInf(curDir)}\"`, `SCHEME_NAME     = \"${scheme}\"`);
+  for(const key of schemeOrder){
+    if(presentRoles.has(key)) lines.push(`${key.padEnd(15)} = \"${safeInf(presentRoles.get(key))}\"`);
+  }
+  lines.push("");
+  return lines.join("\r\n");
+}
+function encodeInf(text){
+  const bytes = new Uint8Array(2 + text.length * 2);
+  bytes[0] = 0xff;
+  bytes[1] = 0xfe;
+  for(let i = 0; i < text.length; i++){
+    const code = text.charCodeAt(i);
+    bytes[2 + i * 2] = code & 255;
+    bytes[3 + i * 2] = code >> 8;
+  }
+  return bytes;
+}
+async function saveInf(){
+  if(!state.files.length) return;
+  const blob = new Blob([encodeInf(buildInf())], {type:OUTPUT_MIME});
+  if(state.folderHandle){
+    try{
+      const handle = await state.folderHandle.getFileHandle(OUTPUT_NAME, {create:true});
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      setStatus("保存成功：" + OUTPUT_NAME, "ok");
+      return;
+    }catch(err){
+      console.warn(err);
+    }
+  }
+  if(window.showSaveFilePicker){
+    try{
+      const accept = {};
+      accept[OUTPUT_MIME] = [".inf"];
+      accept["text/plain"] = [".inf"];
+      const handle = await window.showSaveFilePicker({suggestedName:OUTPUT_NAME, types:[{description:"安装信息文件 (*.inf)", accept}]});
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      setStatus("保存成功：" + OUTPUT_NAME, "ok");
+      return;
+    }catch(err){
+      if(err && err.name === "AbortError") return;
+      setStatus("保存失败：" + err.message, "warn");
+      return;
+    }
+  }
+  downloadBlob(blob, OUTPUT_NAME);
+}
+function downloadBlob(blob, fileName){
+  if(window.navigator && navigator.msSaveOrOpenBlob){
+    navigator.msSaveOrOpenBlob(blob, fileName);
+    setStatus("已开始下载：" + fileName, "ok");
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setStatus("已开始下载：" + fileName, "ok");
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+async function parseCur(buffer){
+  const dv = new DataView(buffer);
+  if(dv.byteLength < 6 || dv.getUint16(0,true) !== 0) return [];
+  const count = dv.getUint16(4,true);
+  const entries = [];
+  for(let i = 0; i < count; i++){
+    const offset = 6 + i * 16;
+    if(offset + 16 > dv.byteLength) break;
+    const width = dv.getUint8(offset) || 256;
+    const height = dv.getUint8(offset + 1) || 256;
+    const bytes = dv.getUint32(offset + 8, true);
+    const imageOffset = dv.getUint32(offset + 12, true);
+    if(bytes > 0 && imageOffset + bytes <= dv.byteLength){
+      entries.push({width,height,bytes,imageOffset,score:width * height});
+    }
+  }
+  entries.sort((a,b)=>b.score - a.score);
+  const urls = [];
+  for(const entry of entries.slice(0,1)){
+    const data = buffer.slice(entry.imageOffset, entry.imageOffset + entry.bytes);
+    const url = await imageDataToUrl(data);
+    if(url) urls.push(url);
+  }
+  return urls;
+}
+async function parseAni(buffer){
+  const dv = new DataView(buffer);
+  if(dv.byteLength < 12 || fourcc(buffer,0) !== "RIFF" || fourcc(buffer,8) !== "ACON") return [];
+  let position = 12;
+  const frames = [];
+  while(position + 8 <= dv.byteLength){
+    const id = fourcc(buffer, position);
+    const size = dv.getUint32(position + 4, true);
+    const start = position + 8;
+    if(start + size > dv.byteLength) break;
+    if(id === "icon"){
+      const parsed = await parseCur(buffer.slice(start, start + size));
+      if(parsed[0]) frames.push(parsed[0]);
+    }else if(id === "LIST"){
+      let child = start + 4;
+      while(child + 8 <= start + size){
+        const childId = fourcc(buffer, child);
+        const childSize = dv.getUint32(child + 4, true);
+        const childStart = child + 8;
+        if(childStart + childSize > dv.byteLength) break;
+        if(childId === "icon"){
+          const parsed = await parseCur(buffer.slice(childStart, childStart + childSize));
+          if(parsed[0]) frames.push(parsed[0]);
+        }
+        child += 8 + childSize + (childSize & 1);
+      }
+    }
+    position += 8 + size + (size & 1);
+  }
+  return frames.slice(0,30);
+}
+function fourcc(buffer, offset){
+  if(offset + 4 > buffer.byteLength) return "";
+  return String.fromCharCode(...new Uint8Array(buffer, offset, 4));
+}
+async function imageDataToUrl(data){
+  const u8 = new Uint8Array(data);
+  if(u8.length >= 4 && u8[0] === 0x89 && u8[1] === 0x50 && u8[2] === 0x4e && u8[3] === 0x47){
+    return URL.createObjectURL(new Blob([data], {type:"image/png"}));
+  }
+  return dibToPng(data);
+}
+function dibToPng(data){
+  const dv = new DataView(data);
+  if(dv.byteLength < 40) return "";
+  const header = dv.getUint32(0,true);
+  const width = dv.getInt32(4,true);
+  const rawHeight = dv.getInt32(8,true);
+  const planes = dv.getUint16(12,true);
+  const bpp = dv.getUint16(14,true);
+  const compression = dv.getUint32(16,true);
+  if(width <= 0 || rawHeight === 0 || planes !== 1 || compression !== 0) return "";
+  const height = Math.abs(rawHeight) / 2 | 0;
+  if(height <= 0) return "";
+  const colorCount = bpp <= 8 ? (dv.getUint32(32,true) || (1 << bpp)) : 0;
+  const paletteOffset = header;
+  const pixelOffset = header + colorCount * 4;
+  const xorStride = Math.floor((width * bpp + 31) / 32) * 4;
+  const andOffset = pixelOffset + xorStride * height;
+  const andStride = Math.floor((width + 31) / 32) * 4;
+  if(pixelOffset < 0 || pixelOffset >= dv.byteLength || andOffset > dv.byteLength) return "";
+  const palette = [];
+  for(let i = 0; i < colorCount; i++){
+    const p = paletteOffset + i * 4;
+    if(p + 3 >= dv.byteLength) return "";
+    palette.push([dv.getUint8(p + 2), dv.getUint8(p + 1), dv.getUint8(p), 255]);
+  }
+  let hasAlpha = false;
+  if(bpp === 32){
+    for(let y = 0; y < height && !hasAlpha; y++){
+      const row = pixelOffset + y * xorStride;
+      for(let x = 0; x < width; x++){
+        const p = row + x * 4 + 3;
+        if(p < dv.byteLength && dv.getUint8(p) !== 0){ hasAlpha = true; break; }
+      }
+    }
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  const image = ctx.createImageData(width, height);
+  const bottomUp = rawHeight > 0;
+  for(let y = 0; y < height; y++){
+    const sourceY = bottomUp ? height - 1 - y : y;
+    const row = pixelOffset + sourceY * xorStride;
+    const maskRow = andOffset + sourceY * andStride;
+    for(let x = 0; x < width; x++){
+      const di = (y * width + x) * 4;
+      let r = 0, g = 0, b = 0, a = 255;
+      if(bpp === 32){
+        const p = row + x * 4;
+        if(p + 3 >= dv.byteLength) continue;
+        b = dv.getUint8(p); g = dv.getUint8(p + 1); r = dv.getUint8(p + 2); a = hasAlpha ? dv.getUint8(p + 3) : 255;
+      }else if(bpp === 24){
+        const p = row + x * 3;
+        if(p + 2 >= dv.byteLength) continue;
+        b = dv.getUint8(p); g = dv.getUint8(p + 1); r = dv.getUint8(p + 2);
+      }else if(bpp === 8){
+        [r,g,b,a] = palette[dv.getUint8(row + x)] || [0,0,0,255];
+      }else if(bpp === 4){
+        const value = dv.getUint8(row + (x >> 1));
+        const index = (x & 1) ? (value & 15) : (value >> 4);
+        [r,g,b,a] = palette[index] || [0,0,0,255];
+      }else if(bpp === 1){
+        const value = dv.getUint8(row + (x >> 3));
+        const index = (value >> (7 - (x & 7))) & 1;
+        [r,g,b,a] = palette[index] || [0,0,0,255];
+      }else{
+        return "";
+      }
+      if(maskRow + (x >> 3) < dv.byteLength){
+        const mask = (dv.getUint8(maskRow + (x >> 3)) >> (7 - (x & 7))) & 1;
+        if(mask === 1) a = 0;
+      }
+      image.data[di] = r;
+      image.data[di + 1] = g;
+      image.data[di + 2] = b;
+      image.data[di + 3] = a;
+    }
+  }
+  ctx.putImageData(image,0,0);
+  return canvas.toDataURL("image/png");
+}
+$("chooseBtn").onclick = chooseFolder;
+$("saveBtn").onclick = saveInf;
+$("clearBtn").onclick = clearAll;
+updateUi();
+</script>
+</body>
+</html>
