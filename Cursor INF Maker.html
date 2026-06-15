@@ -537,7 +537,7 @@ function downloadBlob(blob, fileName){
   setStatus("已开始下载：" + fileName, "ok");
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
-async function parseCur(buffer){
+async function parseCur(buffer, center = true){
   const dv = new DataView(buffer);
   if(dv.byteLength < 6 || dv.getUint16(0,true) !== 0) return [];
   const count = dv.getUint16(4,true);
@@ -557,7 +557,7 @@ async function parseCur(buffer){
   const urls = [];
   for(const entry of entries.slice(0,1)){
     const data = buffer.slice(entry.imageOffset, entry.imageOffset + entry.bytes);
-    const url = await imageDataToUrl(data);
+    const url = await imageDataToUrl(data, center);
     if(url) urls.push(url);
   }
   return urls;
@@ -573,7 +573,7 @@ async function parseAni(buffer){
     const start = position + 8;
     if(start + size > dv.byteLength) break;
     if(id === "icon"){
-      const parsed = await parseCur(buffer.slice(start, start + size));
+      const parsed = await parseCur(buffer.slice(start, start + size), false);
       if(parsed[0]) frames.push(parsed[0]);
     }else if(id === "LIST"){
       let child = start + 4;
@@ -583,7 +583,7 @@ async function parseAni(buffer){
         const childStart = child + 8;
         if(childStart + childSize > dv.byteLength) break;
         if(childId === "icon"){
-          const parsed = await parseCur(buffer.slice(childStart, childStart + childSize));
+          const parsed = await parseCur(buffer.slice(childStart, childStart + childSize), false);
           if(parsed[0]) frames.push(parsed[0]);
         }
         child += 8 + childSize + (childSize & 1);
@@ -591,18 +591,117 @@ async function parseAni(buffer){
     }
     position += 8 + size + (size & 1);
   }
-  return frames.slice(0,30);
+  return centerPreviewFrames(frames.slice(0,30));
 }
 function fourcc(buffer, offset){
   if(offset + 4 > buffer.byteLength) return "";
   return String.fromCharCode(...new Uint8Array(buffer, offset, 4));
 }
-async function imageDataToUrl(data){
+async function imageDataToUrl(data, center = true){
   const u8 = new Uint8Array(data);
+  let url = "";
   if(u8.length >= 4 && u8[0] === 0x89 && u8[1] === 0x50 && u8[2] === 0x4e && u8[3] === 0x47){
-    return URL.createObjectURL(new Blob([data], {type:"image/png"}));
+    url = URL.createObjectURL(new Blob([data], {type:"image/png"}));
+  }else{
+    url = dibToPng(data);
   }
-  return dibToPng(data);
+  return center ? centerPreviewImage(url) : url;
+}
+function loadImage(url){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+async function centerPreviewImage(url){
+  if(!url) return "";
+  const frames = await centerPreviewFrames([url]);
+  return frames[0] || url;
+}
+async function centerPreviewFrames(urls){
+  const sources = [];
+  let union = null;
+  for(const url of urls){
+    if(!url) continue;
+    const source = await loadPreviewSource(url);
+    if(!source) continue;
+    sources.push(source);
+    union = union ? unionBounds(union, source.visible) : {...source.visible};
+  }
+  if(!sources.length || !union) return urls;
+
+  const unionWidth = Math.max(1, union.right - union.left + 1);
+  const unionHeight = Math.max(1, union.bottom - union.top + 1);
+  return sources.map(source => {
+    const output = document.createElement("canvas");
+    output.width = source.width;
+    output.height = source.height;
+    const outputCtx = output.getContext("2d");
+    const sx = Math.max(0, union.left);
+    const sy = Math.max(0, union.top);
+    const sr = Math.min(source.width - 1, union.right);
+    const sb = Math.min(source.height - 1, union.bottom);
+    if(sr < sx || sb < sy) return source.url;
+
+    outputCtx.drawImage(
+      source.canvas,
+      sx,
+      sy,
+      sr - sx + 1,
+      sb - sy + 1,
+      Math.round((source.width - unionWidth) / 2) + (sx - union.left),
+      Math.round((source.height - unionHeight) / 2) + (sy - union.top),
+      sr - sx + 1,
+      sb - sy + 1
+    );
+    return output.toDataURL("image/png");
+  });
+}
+async function loadPreviewSource(url){
+  try{
+    const img = await loadImage(url);
+    const width = img.naturalWidth || img.width;
+    const height = img.naturalHeight || img.height;
+    if(!width || !height) return null;
+
+    const source = document.createElement("canvas");
+    source.width = width;
+    source.height = height;
+    const sourceCtx = source.getContext("2d");
+    sourceCtx.drawImage(img, 0, 0);
+
+    const image = sourceCtx.getImageData(0, 0, width, height);
+    return {url, canvas:source, width, height, visible:findVisibleBounds(image, width, height)};
+  }catch(err){
+    console.warn(err);
+    return null;
+  }
+}
+function findVisibleBounds(image, width, height){
+  let left = width, top = height, right = -1, bottom = -1;
+  for(let y = 0; y < height; y++){
+    for(let x = 0; x < width; x++){
+      const alpha = image.data[(y * width + x) * 4 + 3];
+      if(alpha <= 8) continue;
+      if(x < left) left = x;
+      if(y < top) top = y;
+      if(x > right) right = x;
+      if(y > bottom) bottom = y;
+    }
+  }
+  return right < left || bottom < top
+    ? {left:0, top:0, right:width - 1, bottom:height - 1}
+    : {left, top, right, bottom};
+}
+function unionBounds(a, b){
+  return {
+    left:Math.min(a.left, b.left),
+    top:Math.min(a.top, b.top),
+    right:Math.max(a.right, b.right),
+    bottom:Math.max(a.bottom, b.bottom)
+  };
 }
 function dibToPng(data){
   const dv = new DataView(data);

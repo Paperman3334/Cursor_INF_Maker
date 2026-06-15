@@ -1,0 +1,14 @@
+bin/
+obj/
+dist/
+publish/
+build-cache/
+chrome-profile-test/
+release/
+.vs/
+.vscode/
+*.exe
+*.user
+*.suo
+*.log
+*.tmp
